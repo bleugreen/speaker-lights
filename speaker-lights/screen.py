@@ -46,11 +46,11 @@ class Screen:
     def update(self, rms=0):
         # clear canvas
         self.ctx.rectangle(0, 0, Screen.width, Screen.height)
-        print(rms)
+
         # do stuff
         pat = cairo.LinearGradient(0.0, Screen.height, 0.0, 0.0)
-        pat.add_color_stop_rgba(0, rms, 0, 0, 1)  # First stop, 50% opacity
-        pat.add_color_stop_rgba(1, 0.0, 0.0, 1-rms, 1)  # Last stop, 100% opacity
+        pat.add_color_stop_rgba(0, 1.0, 0, 0, 1)  # First stop, 50% opacity
+        pat.add_color_stop_rgba(1, 0.0, 0.0, rms, 1)  # Last stop, 100% opacity
         self.ctx.set_source(pat)
         self.ctx.fill()
 
