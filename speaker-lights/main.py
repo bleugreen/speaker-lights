@@ -13,6 +13,8 @@ def main():
 
 if __name__ == "__main__":
     count = 0
-    while count < 1000:
+    while count < 10000:
         main()
         count += 1
+    screen.close()
+    analyzer.close()

@@ -15,11 +15,11 @@ class Analyzer:
         self.max_rms = 1
         
         self.p = pyaudio.PyAudio()
-        self.stream = self.p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
+        self.stream = self.p.open(format=Analyzer.FORMAT,
+                    channels=Analyzer.CHANNELS,
+                    rate=Analyzer.RATE,
                     input=True,
-                    frames_per_buffer=CHUNK,
+                    frames_per_buffer=Analyzer.CHUNK,
                     stream_callback=self.callback)
 
     def callback(self, in_data, frame_count, time_info, flag):
