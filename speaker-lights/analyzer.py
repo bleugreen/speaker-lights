@@ -2,26 +2,24 @@ import pyaudio
 import time
 import numpy as np
 import audioop
-import librosa
 
 class Analyzer:
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+    RATE = 44100
     
     def __init__(self):
-        self.CHUNK = 1024
-        self.FORMAT = pyaudio.paInt16
-        self.CHANNELS = 1
-        self.RATE = 44100
-        
         self.fulldata = np.array([])
         self.rms = 1
         self.max_rms = 1
         
         self.p = pyaudio.PyAudio()
-        self.stream = self.p.open(format=self.FORMAT,
-                    channels=self.CHANNELS,
-                    rate=self.RATE,
+        self.stream = self.p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
                     input=True,
-                    frames_per_buffer=self.CHUNK,
+                    frames_per_buffer=CHUNK,
                     stream_callback=self.callback)
 
     def callback(self, in_data, frame_count, time_info, flag):
