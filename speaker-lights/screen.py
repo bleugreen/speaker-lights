@@ -36,7 +36,7 @@ class Screen:
 
     def __init__(self):
         self.strip     = dotstar.DotStar(board.SCK, board.MOSI, Screen.numpixels,
-                  brightness=1.0, auto_write=False, pixel_order=Screen.order)
+                  brightness=0.9, auto_write=False, pixel_order=Screen.order)
 
         self.img = np.array(Screen.im)
         self.surface = cairo.ImageSurface.create_for_data(self.img,cairo.FORMAT_RGB24, Screen.width, Screen.height)
@@ -92,8 +92,8 @@ class Screen:
         for y in range(Screen.height):
             for x in range(Screen.width):
                 strip_index = int(Screen.strip_map[y][x])
-                if strip_index >= 0:
-                    self.strip[strip_index] = (int(img[y][x][2]),int(img[y][x][1]),int(img[y][x][0]))
+                if strip_index >= 10:
+                    self.strip[strip_index-10] = (int(img[y][x][2]),int(img[y][x][1]),int(img[y][x][0]))
         self.strip.show()
     
     
@@ -102,7 +102,7 @@ class Screen:
         # clear canvas
         self.ctx.move_to(0,0)
         self.ctx.rectangle(0, 0, Screen.width, Screen.height)
-        self.ctx.set_source_rgba(0,0,0,0.8)
+        self.ctx.set_source_rgba(0,0,0,0.6)
         self.ctx.fill()
         # do stuff
 #        pat = cairo.LinearGradient(0.0, Screen.height, 0.0, 0.0)
@@ -118,11 +118,11 @@ class Screen:
             val = min(self.scaled_bark[y], 1)
             s = min(max(val,0.7), 1)
             b = val/2
-            hue = float(y) / Screen.height
+            hue = float(y) / 10#Screen.height
             color = Color(hue=hue, saturation=s, luminance=b)
             r,g,b = color.rgb
             center_width = 7*val
-            side_width = 4*val
+            side_width = 5*val
             margin = (7 - center_width)/2
             self.ctx.rectangle(x,Screen.height-y, center_width, 1)
             self.ctx.rectangle(5-side_width,y, side_width, 1)

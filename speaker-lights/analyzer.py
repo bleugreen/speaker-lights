@@ -27,9 +27,9 @@ class Analyzer:
                     rate=Analyzer.RATE,
                     input=True,
                     frames_per_buffer=Analyzer.CHUNK,
-                    stream_callback=self.callback)
+                    stream_callback=self.audioIn)
 
-    def callback(self, in_data, frame_count, time_info, flag):
+    def audioIn(self, in_data, frame_count, time_info, flag):
         audio_data = np.frombuffer(in_data, dtype=np.single)
         
         spec = self.spectrum(self.w(audio_data))

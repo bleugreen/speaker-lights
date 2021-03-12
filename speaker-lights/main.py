@@ -1,25 +1,41 @@
 import time
-import redis
-
+import argparse
+from configparser import ConfigParser
+import json
 
 from screen import Screen
 from analyzer import Analyzer
+from dbclient import DbClient
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-c","--config", help="redis db connection details")
+args = parser.parse_args()
+configPath = args.config
+
+configur = ConfigParser()
+configur.read(configPath)
+servermode = 'cloud' # Either 'cloud' or 'local'
+hostname = configur.get(servermode,'host')
+password = configur.get(servermode,'password')
+port = configur.getint(servermode, 'port')
+
+
+
 
 screen = Screen()
 analyzer = Analyzer()
-
-con = redis.Redis("localhost")
-
+db = DbClient(host=hostname, port=port, password=password)
 
 def main():
     bark = analyzer.get_bark()
     screen.update(bark)
-    print(con.get("mode").decode("utf-8"))
 
 if __name__ == "__main__":
     count = 0
-    while True:
-        main()
-        count += 1
+    while count < 10000:
+        time.sleep(0.1)
+        if db.hasChanged():
+            # db.propogate(screen, analyzer)
+    thread.stop()
     screen.close()
     analyzer.close()
