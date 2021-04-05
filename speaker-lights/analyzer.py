@@ -14,10 +14,23 @@ class Analyzer:
     def __init__(self):
         self.fulldata = np.array([])
         self.barkbands = np.array([])
-        self.rms = 1
-        self.max_rms = 1
+        self.loud = 0.0
+        self.maxloud = 0.0
+        
+        self.onset = 0.0
+        self.lowonset = 0.0
+        self.lowonsetraw = 0.0
+        self.onsetmax = 0.1
+        
+        self.meanVol = 0.0
+        self.volLength = 20.0
+        self.silent = False
+        
+        self.toggles = {'bark':False, 'bass':False}
         
         self.w = Windowing(type='hann')
+        self.lowpass = LowPass(cutoffFrequency=120)
+        self.onsetdetection = Leq()
         self.spectrum = Spectrum()
         self.bark = BarkBands()
         
@@ -32,13 +45,34 @@ class Analyzer:
     def audioIn(self, in_data, frame_count, time_info, flag):
         audio_data = np.frombuffer(in_data, dtype=np.single)
         
-        spec = self.spectrum(self.w(audio_data))
-        self.barkbands = self.bark(spec)
-        self.rms = audioop.rms(audio_data, 2)
-        if self.rms > self.max_rms:
-            self.max_rms = self.rms
+        self.onset = -1*self.onsetdetection(audio_data)
+        
+        self.meanVol -= self.meanVol/self.volLength
+        self.meanVol += self.onset/self.volLength
+        
+        if self.onset > 70:
+            self.silent = True
+        else:
+            self.silent = False
+        
+        #no need to run analysis if nothing is playing
+        if not self.silent:
+            spec = self.spectrum(self.w(audio_data))
+            self.barkbands = self.bark(spec)
+            self.lowonset =-1*self.onsetdetection(self.lowpass(audio_data))
+            if self.lowonset > self.onsetmax:
+                self.onsetmax = self.lowonset
+            else:
+                self.lowonset = self.onsetmax - self.lowonset
+            self.lowonset = self.lowonset / self.onsetmax
 
-        self.fulldata = audio_data
+    #        self.loud = self.loudness(audio_data)
+    #        if self.loud > self.maxloud:
+    #            self.maxloud -= self.maxloud/20
+    #            self.maxloud += self.loud / 20
+    #        self.loud = self.loud / self.maxloud
+            self.rms = audioop.rms(audio_data, 2)
+
         return (audio_data, pyaudio.paContinue)
 
     
@@ -49,8 +83,15 @@ class Analyzer:
     def get_bark(self):
         return self.barkbands
         
-    def get_rms_ratio(self):
-        return float(self.rms) / self.max_rms
+    def get_rms(self):
+        return self.rmsval
     
-    def get_fulldata(self):
-        return self.fulldata
+    def get(self, name=''):
+        if name == 'silent':
+            return self.silent
+        elif name == 'bark':
+            return self.barkbands
+        elif name == 'bass':
+            return self.lowonset
+        else:
+            return self.lowonset, self.barkbands, self.silent
