@@ -31,9 +31,9 @@ class Palette:
         self.palette = []
         for item in plist:
             self.palette.append(Color(item))
-        print("PALETTE RECEIVE")
-        for item in self.palette:
-            print(item)
+        #print("PALETTE RECEIVE")
+        #for item in self.palette:
+         #   print(item)
             
         
 

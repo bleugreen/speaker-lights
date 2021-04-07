@@ -2,6 +2,7 @@ import redis
 import json
 
 from palette import Palette
+from layer import Layer
 
 class DbClient:
     changed = False
@@ -18,10 +19,10 @@ class DbClient:
             self.sub.subscribe(**{'active': self.handleMessage})
             self.thread = self.sub.run_in_thread(sleep_time=0.01)
             self.palette = []
-            
-            init_id = self.client.get("mode:active")
-            init_mode = self.client.hgetall("mode:"+init_id.decode('utf-8'))
-            self.updatePalette(init_mode[b'palette'].decode('utf-8'))
+
+            sid = self.client.get("scene:active").decode('utf-8')
+            layers = self.client.zrange("scene:"+sid+":layers", 0, -1)
+            print(layers)
     
     def handleMessage(self, message):
         data = message['data'].decode('utf-8').split(':')
@@ -57,7 +58,26 @@ class DbClient:
             #print(in_palette)
     
     def getActive(self):
-        return self.client.get("scene:active")
+        return self.client.get("scene:active").decode('utf-8')
+
+    def getLayers(self,sid):
+        layers = []
+        data = self.client.zrange("scene:"+sid+":layers", 0, -1)
+        for lid in data:
+            layer = self.getLayer(lid.decode('utf-8'))
+            layers.append(layer)
+        print("length: ", len(layers))
+        print("type: ", type(layers[0]))
+        return layers
+    
+    def getLayer(self, lid):
+        data = self.client.hgetall("layer:"+lid)
+        layer_params = {}
+        for key in data:
+            layer_params[key.decode('utf-8')] = data[key].decode('utf-8')
+        p = self.getPalette(layer_params['pid'])
+        return Layer(lid, layer=layer_params, palette=p)
+
 
     def getPalette(self, pid):
         data = self.client.hgetall("palette:"+pid)

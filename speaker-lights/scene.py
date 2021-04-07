@@ -3,15 +3,17 @@ from layer import Layer
 # template class and utility methods for drawing and managing layers
 class Scene:
     def __init__(self, sid=-1):
-        self.lid = lid
-        self.opacity = opacity
-        self.pid = pid
-        self.palette = Palette()
-        self.source = source
-        self.pos = pos
-        self.ctx = context
-        self.analyzer = analyzer
-    
+        self.sid = lid
+        
+    # reorder
+
+    # add layer
+
+    # delete layer
+
+    # update layer
+
+    # parse update
     def update(self, message):
         print('update received - '+self.sid)
         print(data)
