@@ -11,7 +11,7 @@ from layer import Layer
 
 # get config file name from args
 parser = argparse.ArgumentParser()
-parser.add_argument("-c","--config", help="redis db connection details")
+parser.add_argument("-C","--config", help="redis db connection details")
 args = parser.parse_args()
 configPath = args.config
 
@@ -26,16 +26,43 @@ port = configur.getint(servermode, 'port')
 #initialization
 screen = Screen()
 analyzer = Analyzer()
-db = DbClient(screen, analyzer, host=hostname, port=port, password=password)
 
-layers = []
+def handleLayerUpdate(lid, field, val):
+    for layer in layers:
+        if layer.lid == lid:
+            print("found layer")
+            layer.handleUpdate(field, val)
+
+def handleSceneUpdate(field):
+    global layers
+    print("scene update")
+    if field == 'reorder':
+        layers.sort(key=lambda x: x.index())
+        print(layers)
+    
+db = DbClient(screen, analyzer, handleLayerUpdate, handleSceneUpdate, host=hostname, port=port, password=password)
+
 def setup():
+    global layers
     sid = db.getActive()
     layers = db.getLayers(sid)
-    active_sources = {}
+    sources = []
     for layer in layers:
-        active_sources[layer.getSource()] = True
-    print("Sources", active_sources)
+        layer.setAnalyzer(analyzer)
+        sources.append(layer.getSource())
+    print("Sources", sources)
+
+def compareIndex(a,b):
+    if a.index() > b.index():
+        return 1
+    elif a.index() == b.index():
+        return 0
+    else:
+        return -1
+
+        
+
+
 
 def main():
     # for layer in layers:
@@ -45,17 +72,45 @@ def main():
     #screen.update(rms, bark, silent)
     time.sleep(1.0/100)
 
+def test():
+    global layers
+    count = 0
+    needsDraw = False
+    screenClear = False
+    while not db.kill:
+        needsDraw = False
+        index=len(layers)-1
+        i = 0
+        while index >= 0:
+            for i in range(len(layers)):
+                if layers[i].index() == index:
+                    layers[i].update()
+                    layers[i].draw(screen.ctx)
+                    needsDraw = needsDraw or layers[i].visible()
+                    index -= 1
+                    break
+
+        if needsDraw:
+            screenClear = False
+            screen.update()
+        elif not screenClear:
+            screenClear = True
+            screen.clear()
+        time.sleep(1/10.0)
+
+
 def shutdown():
     db.stop()
     screen.close()
     analyzer.close()
-    os.system('sudo python startup.py')
+    os.system('sudo python /home/pi/speaker-lights/speaker-lights/shutdown.py')
     
 
 if __name__ == "__main__":
     count = 0
     setup()
-    while not db.kill:
-        main()
+    test()
+    # while not db.kill:
+    #     main()
 
     shutdown()

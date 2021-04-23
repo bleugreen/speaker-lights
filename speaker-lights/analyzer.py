@@ -11,6 +11,8 @@ class Analyzer:
     CHANNELS = 1
     RATE = 44100
     
+    analyzer = 'placeholder'
+
     def __init__(self):
         self.fulldata = np.array([])
         self.barkbands = np.array([])
@@ -41,6 +43,7 @@ class Analyzer:
                     input=True,
                     frames_per_buffer=Analyzer.CHUNK,
                     stream_callback=self.audioIn)
+        self.maxrms = 1.0
 
     def audioIn(self, in_data, frame_count, time_info, flag):
         audio_data = np.frombuffer(in_data, dtype=np.single)
@@ -71,7 +74,11 @@ class Analyzer:
     #            self.maxloud -= self.maxloud/20
     #            self.maxloud += self.loud / 20
     #        self.loud = self.loud / self.maxloud
+            
             self.rms = audioop.rms(audio_data, 2)
+            if self.rms > self.maxrms:
+                self.maxrms = self.rms
+            self.rms = max(((self.rms/self.maxrms)-0.8)*5, 0)
 
         return (audio_data, pyaudio.paContinue)
 
@@ -93,5 +100,7 @@ class Analyzer:
             return self.barkbands
         elif name == 'bass':
             return self.lowonset
+        elif name == 'rms':
+            return self.rms
         else:
             return self.lowonset, self.barkbands, self.silent

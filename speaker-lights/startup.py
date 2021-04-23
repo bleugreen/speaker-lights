@@ -10,7 +10,7 @@ import math
 import numpy as np
 import time
 
-numpixels = 247           #
+numpixels = 472           #
 order     = dotstar.BGR  #
 
 star_map = np.array([[8,10,15,17,19,21,4,6],
