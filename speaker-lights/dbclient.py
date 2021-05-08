@@ -9,60 +9,54 @@ class DbClient:
     
     def __init__(self, screen, analyzer, layerUpdate, sceneUpdate, host='', port=0, password='', update=''):
         if len(host) > 0:
+            # Assign object references
             self.screen = screen
             self.analyzer = analyzer
-            self.kill = False
 
+            # Assign update callbacks
             self.layerUpdate = layerUpdate
             self.sceneUpdate = sceneUpdate
+
+            # Init killswitch
+            self.kill = False
             
-            self.messenger = redis.Redis(host=host, port=port, password=password)
+            # Init Redis client (sends messages / sets values)
             self.client = redis.Redis(host=host, port=port, password=password)
+
+            # Init Redis messenger (receives messages)
+            self.messenger = redis.Redis(host=host, port=port, password=password)
             self.sub = self.messenger.pubsub()
             self.sub.subscribe(**{'active': self.handleMessage})
             self.thread = self.sub.run_in_thread(sleep_time=0.01)
+            
             self.client.set("running", "true")
             self.client.publish("pi2site", "running:true")
-            self.palette = []
 
-            sid = self.client.get("scene:active").decode('utf-8')
-            layers = self.client.zrange("scene:"+sid+":layers", 0, -1)
-            print(layers)
+
     
     def handleMessage(self, message):
         data = message['data'].decode('utf-8').split(':')
         self.changed = True
         if len(data) > 0:
-            if data[0] == 'switch':
-                print("Mode Switch")
-                #updateMode(modeid=data[1])
-            elif data[0] == 'update':
-                if data[1] == 'scene':
-                    if data[2] == 'reorder':
-                        self.sceneUpdate("reorder")
-                else:
-                    lid = data[1]
-                    if data[2] == 'pid':
-                        print("Palette Update")
-                        palette = self.getPalette(data[3])
-                        self.layerUpdate(lid,"palette", palette)
-                    else:
-                        self.layerUpdate(lid,data[2], data[3])
-            elif data[0] == 'kill':
+            if data[0] == 'kill':
                 self.kill = True
-    
-    def updatePalette(self, pid):
-        data = self.client.hgetall("palette:"+pid)
-        colors = self.client.lrange("palette:"+pid+":colors", 0, -1)
-        print("name: "+data[b'name'].decode('utf-8'))
-        if len(colors) > 0:
-            in_palette = []
-            for color in colors:
-                in_palette.append(color.decode('utf-8'))
+            if data[0] == 'scene':
+                if data[1] == 'reorder':
+                    self.sceneUpdate("reorder")
+                elif data[1] == 'new':
+                    layer = self.getLayer(data[2])
+                    self.sceneUpdate('new', layer=layer)
+                elif data[1] == 'delete':
+                    self.sceneUpdate('delete', lid=data[2])
+            elif data[0] == 'layer':
+                lid = data[1]
+                if data[2] == 'pid':
+                    print("Palette Update")
+                    palette = self.getPalette(data[3])
+                    self.layerUpdate(lid,"palette", palette)
+                else:
+                    self.layerUpdate(lid,data[2], data[3])
             
-            self.palette = in_palette
-            self.screen.setPalette(self.palette)
-            #print(in_palette)
     
     def getActive(self):
         return self.client.get("scene:active").decode('utf-8')

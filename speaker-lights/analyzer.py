@@ -82,7 +82,14 @@ class Analyzer:
 
         return (audio_data, pyaudio.paContinue)
 
-    
+    def setSources(self, sources):
+        self.sources = sources
+
+    def updateSources(self, old, new):
+        self.sources.remove(old)
+        self.sources.append(new)
+        
+
     def close(self):
         self.stream.stop_stream()
         self.stream.close()

@@ -17,8 +17,12 @@ from palette import Palette
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 class Screen:
-    numpixels = 472           #
+    numpixels = 474           #
     order     = dotstar.BGR  #
+
+    star_len = 0 #22
+    buffer_len = 1
+    speaker_len = 225
 
     starmap_path = os.path.join(THIS_FOLDER, 'starmap.csv')
     stripmap_left_path = os.path.join(THIS_FOLDER, 'stripmap_left.csv')
@@ -40,13 +44,16 @@ class Screen:
         self.surface = cairo.ImageSurface.create_for_data(self.img,cairo.FORMAT_RGB24, Screen.width, Screen.height)
         self.ctx = cairo.Context(self.surface)
 
+        offset1 = Screen.star_len + Screen.buffer_len
+        offset2 = offset1 + Screen.buffer_len+Screen.speaker_len
 
-
-        self.right_offset = 22-22
-        self.left_offset = 247-22
         if layout=='LR':
-            self.right_offset = 247-22
-            self.left_offset = 22-22
+            self.left_offset = offset1
+            self.right_offset = offset2
+        else:
+            self.left_offset = offset2
+            self.right_offset = offset1
+            
     
     # Translates Cairo images to LED output        
     def draw(self, img, dest='left'):
@@ -61,9 +68,6 @@ class Screen:
                 strip_index = int(Screen.stripmap_left[y][x])
                 if strip_index >= 0:
                     self.strip[strip_index+self.left_offset] = (int(img[y][x][2]),int(img[y][x][1]),int(img[y][x][0]))
-                    # if y==13 and x == 8:
-                        # print('left:')
-                        # print(int(img[y][x][2]),int(img[y][x][1]),int(img[y][x][0]))
             #right
             for x in range(int(Screen.width/2)):
                 strip_index = int(Screen.stripmap_right[y][x])

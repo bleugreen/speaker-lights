@@ -33,12 +33,19 @@ def handleLayerUpdate(lid, field, val):
             print("found layer")
             layer.handleUpdate(field, val)
 
-def handleSceneUpdate(field):
+def handleSceneUpdate(field, layer=-1, lid=-1):
     global layers
     print("scene update")
-    if field == 'reorder':
-        layers.sort(key=lambda x: x.index())
-        print(layers)
+    if field == 'new' and layer != -1:
+        layers.append(layer)
+    elif field == 'delete' and lid != -1:
+        for layer in layers:
+            if layer.lid == lid:
+                layers.remove(layer)
+    # if field == 'reorder':
+    #     layers.sort(key=lambda x: x.index()) # sort by index
+    #     print(layers)
+    
     
 db = DbClient(screen, analyzer, handleLayerUpdate, handleSceneUpdate, host=hostname, port=port, password=password)
 
@@ -50,19 +57,8 @@ def setup():
     for layer in layers:
         layer.setAnalyzer(analyzer)
         sources.append(layer.getSource())
-    print("Sources", sources)
-
-def compareIndex(a,b):
-    if a.index() > b.index():
-        return 1
-    elif a.index() == b.index():
-        return 0
-    else:
-        return -1
-
-        
-
-
+    analyzer.setSources(sources)
+    print("Init Sources", sources)
 
 def main():
     # for layer in layers:
@@ -96,7 +92,7 @@ def test():
         elif not screenClear:
             screenClear = True
             screen.clear()
-        time.sleep(1/10.0)
+        time.sleep(1/100.0)
 
 
 def shutdown():
