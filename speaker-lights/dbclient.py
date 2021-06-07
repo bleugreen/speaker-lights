@@ -2,19 +2,18 @@ import redis
 import json
 
 from palette import Palette
-from layer import Layer
+import layer
 
 class DbClient:
     changed = False
     
-    def __init__(self, screen, analyzer, layerUpdate, sceneUpdate, host='', port=0, password='', update=''):
+    def __init__(self, screen, analyzer, sceneUpdate, host='', port=0, password='', update=''):
         if len(host) > 0:
             # Assign object references
             self.screen = screen
             self.analyzer = analyzer
 
             # Assign update callbacks
-            self.layerUpdate = layerUpdate
             self.sceneUpdate = sceneUpdate
 
             # Init killswitch
@@ -40,22 +39,9 @@ class DbClient:
         if len(data) > 0:
             if data[0] == 'kill':
                 self.kill = True
-            if data[0] == 'scene':
-                if data[1] == 'reorder':
-                    self.sceneUpdate("reorder")
-                elif data[1] == 'new':
-                    layer = self.getLayer(data[2])
-                    self.sceneUpdate('new', layer=layer)
-                elif data[1] == 'delete':
-                    self.sceneUpdate('delete', lid=data[2])
-            elif data[0] == 'layer':
-                lid = data[1]
-                if data[2] == 'pid':
-                    print("Palette Update")
-                    palette = self.getPalette(data[3])
-                    self.layerUpdate(lid,"palette", palette)
-                else:
-                    self.layerUpdate(lid,data[2], data[3])
+            else:
+                # print(data)
+                self.sceneUpdate(target=data[0], id=data[1], action=data[2], field=data[3], val=data[4])
             
     
     def getActive(self):
@@ -85,11 +71,16 @@ class DbClient:
         p = self.getPalette(layer_params['pid'])
 
         # return full layer
-        return Layer(lid, layer=layer_params, palette=p)
+        type = layer_params.get('type', 'ambient')
+        if type == 'ambient':
+            return layer.Ambient(lid, layer=layer_params, palette=p)
+        elif type == 'spectrum':
+            print('creating spectrum layer', layer_params)
+            return layer.Spectrum(lid, layer=layer_params, palette=p)
 
 
     def getPalette(self, pid):
-        print(pid)
+        # print(pid)
         data = self.client.hgetall("palette:"+pid)
         lerp = (data[b'lerp'].decode('utf-8') == "true")
         colors = self.client.lrange("palette:"+pid+":colors", 0, -1)

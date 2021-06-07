@@ -7,7 +7,8 @@ import os
 from screen import Screen
 from analyzer import Analyzer
 from dbclient import DbClient
-from layer import Layer
+import layer
+from scene import Scene
 
 # get config file name from args
 parser = argparse.ArgumentParser()
@@ -26,39 +27,12 @@ port = configur.getint(servermode, 'port')
 #initialization
 screen = Screen()
 analyzer = Analyzer()
-
-def handleLayerUpdate(lid, field, val):
-    for layer in layers:
-        if layer.lid == lid:
-            print("found layer")
-            layer.handleUpdate(field, val)
-
-def handleSceneUpdate(field, layer=-1, lid=-1):
-    global layers
-    print("scene update")
-    if field == 'new' and layer != -1:
-        layers.append(layer)
-    elif field == 'delete' and lid != -1:
-        for layer in layers:
-            if layer.lid == lid:
-                layers.remove(layer)
-    # if field == 'reorder':
-    #     layers.sort(key=lambda x: x.index()) # sort by index
-    #     print(layers)
-    
-    
-db = DbClient(screen, analyzer, handleLayerUpdate, handleSceneUpdate, host=hostname, port=port, password=password)
+scene = Scene()
+db = DbClient(screen, analyzer, scene.handleUpdate, host=hostname, port=port, password=password)
 
 def setup():
-    global layers
     sid = db.getActive()
-    layers = db.getLayers(sid)
-    sources = []
-    for layer in layers:
-        layer.setAnalyzer(analyzer)
-        sources.append(layer.getSource())
-    analyzer.setSources(sources)
-    print("Init Sources", sources)
+    scene.setup(sid, db, analyzer, screen)
 
 def main():
     # for layer in layers:
@@ -69,30 +43,13 @@ def main():
     time.sleep(1.0/100)
 
 def test():
-    global layers
+    layers = scene.layers
     count = 0
     needsDraw = False
     screenClear = False
     while not db.kill:
-        needsDraw = False
-        index=len(layers)-1
-        i = 0
-        while index >= 0:
-            for i in range(len(layers)):
-                if layers[i].index() == index:
-                    layers[i].update()
-                    layers[i].draw(screen.ctx)
-                    needsDraw = needsDraw or layers[i].visible()
-                    index -= 1
-                    break
-
-        if needsDraw:
-            screenClear = False
-            screen.update()
-        elif not screenClear:
-            screenClear = True
-            screen.clear()
-        time.sleep(1/100.0)
+        scene.draw()
+        #time.sleep(1/100.0)
 
 
 def shutdown():

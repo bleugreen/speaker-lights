@@ -1,8 +1,7 @@
-from palette import Palette
 import cairo
 
+from palette import Palette
 from screen import Screen
-from ambient import Ambient
 
 # template class and utility methods for drawing and managing layers
 class Layer:
@@ -10,29 +9,24 @@ class Layer:
         #print(layer)
         self.lid = lid
         self.params = layer
-        print(self.params)
+        # print(self.params)
         if palette == 0:
             self.palette = Palette()
         else:
             self.palette = palette
 
-        self.data = 0
-
     # callback used to react to db changes
     def handleUpdate(self, field, val):
-        print('Layer Update:')
-        print('name: '+self.params.get('name', 'no name'))
-        print('field: '+field)
-        
         if field == 'palette':
             self.palette = val
+            val = val.palette
         elif field == 'source':
             oldSource = self.params['source']
             self.params['source'] = val
             self.analyzer.updateSources(oldSource, val)
         else:
-            print('val: '+val)
             self.params[field] = val
+        print('Update: (',self.params.get('name', 'no name'),') ',field,' = ', val)
 
     # returns data source of layer
     def getSource(self):
@@ -48,19 +42,9 @@ class Layer:
         self.data = self.analyzer.get(source)
         #print(self.data)
     
-    # draws layer to screen
-    def draw(self, ctx):
-        visible = self.params.get('visible', 'false')
-        pattern = self.params.get('pattern', 'lingradient')
-        if visible == 'true':
-            if pattern == 'lingradient':
-                Ambient.drawLinearGradient(ctx, self.params, self.palette)
-            if pattern == 'rain':
-                self.rain = Ambient.drawRain(ctx, self.params, self.palette, self.rain)
-    
     # returns z-index of layer
     def index(self):
-        return int(self.params.get('index', 0))
+        return int(self.params.get('index', 100)) # end of list by default
 
     # returns true if layer needs to be drawn
     def visible(self):

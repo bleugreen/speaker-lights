@@ -35,7 +35,7 @@ class Screen:
     height = len(stripmap_right)
     width = len(stripmap_right[0])*2
 
-    def __init__(self, layout='RL'):
+    def __init__(self, layout='LR'):
         self.strip     = dotstar.DotStar(board.SCK, board.MOSI, Screen.numpixels,
                   brightness=1.0, auto_write=False, pixel_order=Screen.order)
 
@@ -73,9 +73,6 @@ class Screen:
                 strip_index = int(Screen.stripmap_right[y][x])
                 if strip_index >= 0:
                     self.strip[strip_index+self.right_offset] = (int(img[y][x+int(Screen.width/2)][2]),int(img[y][x+int(Screen.width/2)][1]),int(img[y][x+int(Screen.width/2)][0]))
-                    # if y==13 and x == 8:
-                        # print('right:')
-                        # print(int(img[y][x+int(Screen.width/2)][2]),int(img[y][x+int(Screen.width/2)][1]),int(img[y][x+int(Screen.width/2)][0]))
         self.strip.show()
 
     
@@ -99,12 +96,12 @@ class Screen:
         self.ctx.set_source_rgba(0,0,0,1)
         self.ctx.paint()
 
-        # self.drawStar()
     
     def clear(self):
         self.ctx.set_source_rgba(0,0,0,1)
         self.ctx.paint()
         self.draw(self.img)
+
 
     def close(self):
         print('done')
