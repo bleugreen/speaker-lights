@@ -1,11 +1,9 @@
-import audioop
-import time
-
-import essentia
-import numpy as np
 import pyaudio
+import time
+import numpy as np
+import audioop
+import essentia
 from essentia.standard import *
-
 
 class Analyzer:
     CHUNK = 1024
@@ -55,7 +53,7 @@ class Analyzer:
         self.meanVol -= self.meanVol/self.volLength
         self.meanVol += self.onset/self.volLength
         
-        if self.onset > 65:
+        if self.onset > 70:
             self.silent = True
         else:
             self.silent = False
@@ -84,15 +82,7 @@ class Analyzer:
 
         return (audio_data, pyaudio.paContinue)
 
-    def setSources(self, sources):
-        self.sources = sources
-
-    def updateSources(self, old, new):
-        self.sources.remove(old)
-        self.sources.append(new)
-        print('Updated sources: ', self.sources)
-        
-
+    
     def close(self):
         self.stream.stop_stream()
         self.stream.close()
@@ -114,9 +104,3 @@ class Analyzer:
             return self.rms
         else:
             return self.lowonset, self.barkbands, self.silent
-    
-    def getSpec(self, name=''):
-        if  name == 'bark':
-            return self.barkbands
-        else:
-            return []
