@@ -18,11 +18,11 @@ def polar2index(r=1, theta=math.pi/2):
         theta -= math.pi*2
     while theta < 0:
         theta += math.pi*2
-    
+
     size   = 0
     offset = 0
     top    = 0
-    
+
     if r==1:
         size   = 20.0
         offset = 100
@@ -44,7 +44,7 @@ class RingPoint:
         self.radius = radius
         self.angle  = angle
         self.color  = color
-    
+
     def draw(self, strip):
         index = polar2index(self.radius, self.angle)
         strip[index] = self.color
@@ -57,7 +57,7 @@ class RingArc:
         self.angle_start  = angle - width/2.0
         self.angle_end  = angle + width/2.0
         self.color  = color
-    
+
     def draw(self, strip):
         start = polar2index(self.radius, self.angle_start)
         end = polar2index(self.radius, self.angle_end)
@@ -81,7 +81,7 @@ class RingArc:
             strip[index+offset] = self.color
             index = (index+1)%size
 
-            
+
 class RingLine:
     def __init__(self, angle, r1, r2, color):
         self.angle = angle
@@ -102,7 +102,7 @@ class RingFan:
         self.angle = angle
         self.color  = color
         self.width  = width
-    
+
     def draw(self, strip):
         width3 = self.width/2.0
 
@@ -128,7 +128,7 @@ class Ring:
     def __init__(self, strip):
         self.draw_list = []
         self.strip = strip
-    
+
     def point(self, angle, radius, color):
         pt  = RingPoint(angle, radius, color)
         self.draw_list.append(pt)
@@ -136,11 +136,11 @@ class Ring:
     def arc(self, angle, width, radius, color):
         arc = RingArc(angle, width, radius, color)
         self.draw_list.append(arc)
-    
+
     def line(self, angle, r1, r2, color):
         arc = RingLine(angle, r1, r2, color)
         self.draw_list.append(arc)
-    
+
     def fan(self, angle, width, color):
         fan = RingFan(angle, width, color)
         self.draw_list.append(fan)
@@ -149,7 +149,7 @@ class Ring:
         size   = 0
         offset = 0
         top    = 0
-        
+
         if r==1:
             size   = 20.0
             offset = 100
@@ -168,12 +168,11 @@ class Ring:
             return -1
 
         return offset+int((size/(2*math.pi))*theta + top)%size
-    
+
     def draw(self):
         for i in range(120):
             self.strip[i] = 0
         for obj in self.draw_list:
             obj.draw(self.strip)
-            self.draw_list.remove(obj)
+        self.draw_list.clear()
         self.strip.show()
-
